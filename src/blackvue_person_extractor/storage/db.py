@@ -51,6 +51,22 @@ def initialize_database(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_video_files_case_id ON video_files(case_id);
         CREATE INDEX IF NOT EXISTS idx_video_files_import_status ON video_files(import_status);
         CREATE INDEX IF NOT EXISTS idx_video_files_processing_status ON video_files(processing_status);
+
+        CREATE TABLE IF NOT EXISTS processing_cache (
+            id INTEGER PRIMARY KEY,
+            file_path TEXT NOT NULL,
+            file_size_bytes INTEGER NOT NULL,
+            modified_time_ns INTEGER NOT NULL,
+            settings_hash TEXT NOT NULL,
+            processed_at TEXT NOT NULL,
+            status TEXT NOT NULL,
+            persons_found INTEGER NOT NULL DEFAULT 0,
+            snapshot_path TEXT,
+            metadata_path TEXT
+        );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_processing_cache_file_settings
+        ON processing_cache(file_path, settings_hash);
         """
     )
     conn.commit()

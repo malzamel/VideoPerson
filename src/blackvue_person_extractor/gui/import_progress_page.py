@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -38,10 +39,17 @@ class ImportProgressPage(QWidget):
         root.addWidget(QLabel("Current file progress"))
         root.addWidget(self.current_file_progress)
 
-        self.counters_label = QLabel("Copied: 0 | Skipped: 0 | Failed: 0 | Bytes copied: 0")
+        self.counters_label = QLabel("Processed: 0 | Skipped: 0 | Failed: 0 | Bytes copied: 0")
         root.addWidget(self.counters_label)
         self.stats_label = QLabel("Persons found: 0 | Detection: not started")
         root.addWidget(self.stats_label)
+        self.preview_title = QLabel("Latest person preview: -")
+        root.addWidget(self.preview_title)
+        self.preview_image = QLabel("No person detected yet.")
+        self.preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview_image.setMinimumHeight(220)
+        self.preview_image.setStyleSheet("border: 1px solid #444;")
+        root.addWidget(self.preview_image)
 
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
@@ -73,7 +81,7 @@ class ImportProgressPage(QWidget):
 
     def set_counters(self, copied: int, skipped: int, failed: int, bytes_copied: int) -> None:
         self.counters_label.setText(
-            f"Copied: {copied} | Skipped: {skipped} | Failed: {failed} | Bytes copied: {bytes_copied}"
+            f"Processed: {copied} | Skipped: {skipped} | Failed: {failed} | Bytes copied: {bytes_copied}"
         )
 
     def set_stage(self, stage_text: str) -> None:
@@ -84,6 +92,20 @@ class ImportProgressPage(QWidget):
 
     def set_detection_stats(self, persons_found: int, note: str) -> None:
         self.stats_label.setText(f"Persons found: {persons_found} | Detection: {note}")
+
+    def set_detection_preview(self, image_path: str, title: str) -> None:
+        pixmap = QPixmap(image_path)
+        if pixmap.isNull():
+            self.preview_title.setText("Latest person preview: failed to load image")
+            return
+        scaled = pixmap.scaled(
+            420,
+            240,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self.preview_title.setText(f"Latest person preview: {title}")
+        self.preview_image.setPixmap(scaled)
 
     def append_log(self, text: str) -> None:
         self.log_view.append(text)
