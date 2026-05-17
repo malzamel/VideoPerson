@@ -22,9 +22,11 @@ class ImportOptions:
     normal_sample_fps: float = 1.0
     event_sample_fps: float = 3.0
     detailed_rescan_fps: float = 5.0
-    max_detection_width: int = 960
+    fast_scan_width: int = 960
+    detailed_scan_width: int = 1280
     use_gpu: bool = True
     debug_mode: bool = False
+    review_mode: bool = False
     show_rejected_debug: bool = False
     chunk_size: int = DEFAULT_COPY_CHUNK_SIZE
 

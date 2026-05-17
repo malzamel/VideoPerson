@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -43,13 +44,34 @@ class ImportProgressPage(QWidget):
         root.addWidget(self.counters_label)
         self.stats_label = QLabel("Candidate windows: 0 | Clear faces accepted: 0 | Rejected candidates: 0 | Detection: not started")
         root.addWidget(self.stats_label)
-        self.preview_title = QLabel("Latest person preview: -")
-        root.addWidget(self.preview_title)
-        self.preview_image = QLabel("No person detected yet.")
-        self.preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview_image.setMinimumHeight(220)
-        self.preview_image.setStyleSheet("border: 1px solid #444;")
-        root.addWidget(self.preview_image)
+        previews_row = QHBoxLayout()
+        previews_row.setSpacing(10)
+
+        rejected_box = QFrame()
+        rejected_box.setFrameShape(QFrame.Shape.StyledPanel)
+        rejected_layout = QVBoxLayout(rejected_box)
+        self.rejected_preview_title = QLabel("Rejected preview (left): -")
+        self.rejected_preview_image = QLabel("No rejected preview yet.")
+        self.rejected_preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.rejected_preview_image.setMinimumHeight(220)
+        self.rejected_preview_image.setStyleSheet("border: 1px solid #444;")
+        rejected_layout.addWidget(self.rejected_preview_title)
+        rejected_layout.addWidget(self.rejected_preview_image)
+
+        accepted_box = QFrame()
+        accepted_box.setFrameShape(QFrame.Shape.StyledPanel)
+        accepted_layout = QVBoxLayout(accepted_box)
+        self.accepted_preview_title = QLabel("Accepted preview (right): -")
+        self.accepted_preview_image = QLabel("No accepted face yet.")
+        self.accepted_preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.accepted_preview_image.setMinimumHeight(220)
+        self.accepted_preview_image.setStyleSheet("border: 1px solid #444;")
+        accepted_layout.addWidget(self.accepted_preview_title)
+        accepted_layout.addWidget(self.accepted_preview_image)
+
+        previews_row.addWidget(rejected_box)
+        previews_row.addWidget(accepted_box)
+        root.addLayout(previews_row)
 
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
@@ -97,19 +119,36 @@ class ImportProgressPage(QWidget):
             f"Rejected candidates: {rejected_candidates} | Detection: {note}"
         )
 
-    def set_detection_preview(self, image_path: str, title: str) -> None:
+    def _load_preview_pixmap(self, image_path: str) -> QPixmap | None:
         pixmap = QPixmap(image_path)
         if pixmap.isNull():
-            self.preview_title.setText("Latest person preview: failed to load image")
-            return
+            return None
         scaled = pixmap.scaled(
             420,
             240,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
-        self.preview_title.setText(f"Latest person preview: {title}")
-        self.preview_image.setPixmap(scaled)
+        return scaled
+
+    def set_accepted_preview(self, image_path: str, title: str) -> None:
+        scaled = self._load_preview_pixmap(image_path)
+        if scaled is None:
+            self.accepted_preview_title.setText("Accepted preview (right): failed to load image")
+            return
+        self.accepted_preview_title.setText(f"Accepted preview (right): {title}")
+        self.accepted_preview_image.setPixmap(scaled)
+
+    def set_rejected_preview(self, image_path: str, title: str) -> None:
+        scaled = self._load_preview_pixmap(image_path)
+        if scaled is None:
+            self.rejected_preview_title.setText("Rejected preview (left): failed to load image")
+            return
+        self.rejected_preview_title.setText(f"Rejected preview (left): {title}")
+        self.rejected_preview_image.setPixmap(scaled)
+
+    def set_rejected_note(self, note: str) -> None:
+        self.rejected_preview_title.setText(f"Rejected preview (left): {note}")
 
     def append_log(self, text: str) -> None:
         self.log_view.append(text)

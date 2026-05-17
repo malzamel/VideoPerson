@@ -117,7 +117,8 @@ def import_files(
     snapshot_dir = output_dir / "person_shots"
     debug_dir = output_dir / "debug"
     snapshot_dir.mkdir(parents=True, exist_ok=True)
-    if options.debug_mode:
+    enable_debug_artifacts = options.debug_mode or options.show_rejected_debug or options.review_mode
+    if enable_debug_artifacts:
         debug_dir.mkdir(parents=True, exist_ok=True)
     settings_hash = hashlib.sha256(
         json.dumps(
@@ -129,8 +130,12 @@ def import_files(
                 "normal_sample_fps": options.normal_sample_fps,
                 "event_sample_fps": options.event_sample_fps,
                 "detailed_rescan_fps": options.detailed_rescan_fps,
-                "max_detection_width": options.max_detection_width,
+                "fast_scan_width": options.fast_scan_width,
+                "detailed_scan_width": options.detailed_scan_width,
                 "use_gpu": options.use_gpu,
+                "debug_mode": options.debug_mode,
+                "review_mode": options.review_mode,
+                "detector_profile": "v2_relaxed_two_level_thresholds",
             },
             sort_keys=True,
         ).encode("utf-8")
@@ -268,8 +273,11 @@ def import_files(
                         normal_sample_fps=options.normal_sample_fps,
                         event_sample_fps=options.event_sample_fps,
                         detailed_rescan_fps=options.detailed_rescan_fps,
-                        max_detection_width=options.max_detection_width,
-                        debug_mode=options.debug_mode,
+                        fast_scan_width_override=options.fast_scan_width,
+                        detailed_scan_width_override=options.detailed_scan_width,
+                        yolo_conf=0.25,
+                        debug_mode=enable_debug_artifacts,
+                        review_mode=(options.review_mode or options.show_rejected_debug),
                     ),
                 )
                 persons_in_video = detection.accepted_faces

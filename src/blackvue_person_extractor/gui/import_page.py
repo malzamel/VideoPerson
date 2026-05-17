@@ -174,10 +174,15 @@ class ImportPage(QWidget):
         self.detailed_fps_spin.setSingleStep(1.0)
         self.detailed_fps_spin.setValue(5.0)
 
-        self.max_width_spin = QSpinBox()
-        self.max_width_spin.setRange(480, 3840)
-        self.max_width_spin.setSingleStep(160)
-        self.max_width_spin.setValue(960)
+        self.fast_width_spin = QSpinBox()
+        self.fast_width_spin.setRange(480, 1920)
+        self.fast_width_spin.setSingleStep(160)
+        self.fast_width_spin.setValue(960)
+
+        self.detailed_width_spin = QSpinBox()
+        self.detailed_width_spin.setRange(640, 3840)
+        self.detailed_width_spin.setSingleStep(160)
+        self.detailed_width_spin.setValue(1280)
 
         rec_types_widget = QWidget()
         rec_types_layout = QHBoxLayout(rec_types_widget)
@@ -195,6 +200,8 @@ class ImportPage(QWidget):
         self.use_gpu_checkbox.setChecked(True)
         self.debug_mode_checkbox = QCheckBox("Save debug overlays (accepted/rejected)")
         self.debug_mode_checkbox.setChecked(False)
+        self.review_mode_checkbox = QCheckBox("Review Mode — save top rejected overlays")
+        self.review_mode_checkbox.setChecked(True)
         self.show_rejected_debug_checkbox = QCheckBox("Show rejected/debug detections")
         self.show_rejected_debug_checkbox.setChecked(False)
         self.important_first_checkbox = QCheckBox("Process important recordings first (E/I/M)")
@@ -221,9 +228,11 @@ class ImportPage(QWidget):
         perf_form.addRow("Normal sample FPS:", self.normal_fps_spin)
         perf_form.addRow("Event sample FPS:", self.event_fps_spin)
         perf_form.addRow("Detailed rescan FPS:", self.detailed_fps_spin)
-        perf_form.addRow("Max detection width:", self.max_width_spin)
+        perf_form.addRow("Fast scan width:", self.fast_width_spin)
+        perf_form.addRow("Detailed scan width:", self.detailed_width_spin)
         perf_form.addRow("", self.use_gpu_checkbox)
         perf_form.addRow("", self.debug_mode_checkbox)
+        perf_form.addRow("", self.review_mode_checkbox)
         perf_form.addRow("", self.show_rejected_debug_checkbox)
         perf_form.addRow("", self.important_first_checkbox)
         perf_form.addRow("AI acceleration:", self.ai_status_label)
@@ -295,7 +304,8 @@ class ImportPage(QWidget):
             self.processing_mode_combo,
             self.detection_strategy_combo,
             self.camera_combo,
-            self.max_width_spin,
+            self.fast_width_spin,
+            self.detailed_width_spin,
             self.normal_fps_spin,
             self.event_fps_spin,
             self.detailed_fps_spin,
@@ -398,9 +408,11 @@ class ImportPage(QWidget):
             "normal_sample_fps": float(self.normal_fps_spin.value()),
             "event_sample_fps": float(self.event_fps_spin.value()),
             "detailed_rescan_fps": float(self.detailed_fps_spin.value()),
-            "max_detection_width": int(self.max_width_spin.value()),
+            "fast_scan_width": int(self.fast_width_spin.value()),
+            "detailed_scan_width": int(self.detailed_width_spin.value()),
             "use_gpu": self.use_gpu_checkbox.isChecked(),
             "debug_mode": self.debug_mode_checkbox.isChecked(),
+            "review_mode": self.review_mode_checkbox.isChecked(),
             "show_rejected_debug": self.show_rejected_debug_checkbox.isChecked(),
             "prioritize_important_first": self.important_first_checkbox.isChecked(),
             "reprocess_scope": self._reprocess_scope,

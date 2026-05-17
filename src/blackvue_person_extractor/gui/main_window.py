@@ -218,9 +218,11 @@ class MainWindow(QMainWindow):
             normal_sample_fps=float(advanced_settings.get("normal_sample_fps", 1.0)),
             event_sample_fps=float(advanced_settings.get("event_sample_fps", 3.0)),
             detailed_rescan_fps=float(advanced_settings.get("detailed_rescan_fps", 5.0)),
-            max_detection_width=int(advanced_settings.get("max_detection_width", 960)),
+            fast_scan_width=int(advanced_settings.get("fast_scan_width", 960)),
+            detailed_scan_width=int(advanced_settings.get("detailed_scan_width", 1280)),
             use_gpu=bool(advanced_settings.get("use_gpu", True)),
             debug_mode=bool(advanced_settings.get("debug_mode", False)),
+            review_mode=bool(advanced_settings.get("review_mode", False)),
             show_rejected_debug=bool(advanced_settings.get("show_rejected_debug", False)),
         )
         self.import_page.append_log(
@@ -339,14 +341,18 @@ class MainWindow(QMainWindow):
             "running (strict clear-face acceptance)",
         )
         if snapshot_path and accepted_in_video > 0:
-            self.import_progress_page.set_detection_preview(
+            self.import_progress_page.set_accepted_preview(
                 snapshot_path,
                 f"Accepted clear face from {filename}",
             )
-        elif self._show_rejected_debug and rejected_preview_path:
-            self.import_progress_page.set_detection_preview(
+        if rejected_preview_path:
+            self.import_progress_page.set_rejected_preview(
                 rejected_preview_path,
                 f"Rejected debug detection from {filename}",
+            )
+        elif total_rejected > 0:
+            self.import_progress_page.set_rejected_note(
+                f"{total_rejected} rejected candidate(s) so far"
             )
 
     def _on_import_finished(self, case_path: str) -> None:
