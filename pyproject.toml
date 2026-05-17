@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blackvue-person-extractor-gui"
+version = "0.1.0"
+description = "GUI-first local BlackVue person extractor for Windows"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "PySide6>=6.7.0",
+  "opencv-python>=4.10.0.84",
+  "numpy>=1.26.0",
+  "pillow>=10.4.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+ai = [
+  "ultralytics>=8.3.0",
+  "mediapipe>=0.10.14",
+]
+
+[project.scripts]
+blackvue-person-extractor = "blackvue_person_extractor.app:main"
