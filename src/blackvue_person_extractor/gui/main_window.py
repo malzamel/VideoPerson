@@ -33,6 +33,9 @@ class MainWindow(QMainWindow):
         self._failed = 0
         self._bytes_copied = 0
         self._persons_found = 0
+        self._candidate_windows_found = 0
+        self._rejected_candidates = 0
+        self._show_rejected_debug = False
         self._process_from_source_mode = True
 
         self.pages = QStackedWidget()
@@ -153,6 +156,7 @@ class MainWindow(QMainWindow):
         process_from_source: bool,
         advanced_settings: dict,
     ) -> None:
+        process_from_source = True
         if self._scan_summary is None:
             QMessageBox.warning(self, "Missing scan", "Please scan source before import.")
             return
@@ -175,6 +179,9 @@ class MainWindow(QMainWindow):
         self._failed = 0
         self._bytes_copied = 0
         self._persons_found = 0
+        self._candidate_windows_found = 0
+        self._rejected_candidates = 0
+        self._show_rejected_debug = bool(advanced_settings.get("show_rejected_debug", False))
         self._process_from_source_mode = process_from_source
         self.import_progress_page.set_stage("Preparing")
         self.import_progress_page.set_mode(
@@ -186,7 +193,7 @@ class MainWindow(QMainWindow):
             if process_from_source
             else f"Copy to local archive | {advanced_settings.get('processing_mode', 'balanced')}"
         )
-        self.import_progress_page.set_detection_stats(0, "not started")
+        self.import_progress_page.set_detection_stats(0, 0, 0, "not started")
         self.import_progress_page.set_counters(0, 0, 0, 0)
         self.pages.setCurrentWidget(self.import_progress_page)
 
@@ -201,7 +208,7 @@ class MainWindow(QMainWindow):
             verify_by_size=verify_size and not process_from_source,
             calculate_sha256=calculate_sha,
             skip_already_copied=skip_already_copied,
-            process_from_source=process_from_source,
+            process_from_source=True,
             processing_mode=str(advanced_settings.get("processing_mode", "balanced")),
             detection_strategy=str(advanced_settings.get("detection_strategy", "person_first_then_face")),
             camera_filter=camera_filter,
@@ -214,6 +221,7 @@ class MainWindow(QMainWindow):
             max_detection_width=int(advanced_settings.get("max_detection_width", 960)),
             use_gpu=bool(advanced_settings.get("use_gpu", True)),
             debug_mode=bool(advanced_settings.get("debug_mode", False)),
+            show_rejected_debug=bool(advanced_settings.get("show_rejected_debug", False)),
         )
         self.import_page.append_log(
             f"Run config: mode={options.processing_mode}, strategy={options.detection_strategy}, "
@@ -295,32 +303,61 @@ class MainWindow(QMainWindow):
         self._bytes_copied = bytes_copied
         self._persons_found = persons_found
         self.import_progress_page.set_counters(copied, skipped, failed, bytes_copied)
-        self.import_progress_page.set_detection_stats(persons_found, "running (FFmpeg sampled face-first)")
+        self.import_progress_page.set_detection_stats(
+            self._candidate_windows_found,
+            persons_found,
+            self._rejected_candidates,
+            "running (strict clear-face acceptance)",
+        )
 
     def _on_import_detection(
         self,
         filename: str,
-        persons_in_video: int,
-        total_persons: int,
+        accepted_in_video: int,
+        total_accepted: int,
+        total_candidate_windows: int,
+        total_rejected: int,
         snapshot_path: str,
+        rejected_preview_path: str,
         sampled_frames: int,
         candidate_windows: int,
+        rejected_in_video: int,
     ) -> None:
+        self._candidate_windows_found = total_candidate_windows
+        self._rejected_candidates = total_rejected
         self.import_progress_page.append_log(
             "Detection: "
-            f"{filename} -> {persons_in_video} person(s), total: {total_persons}, "
-            f"sampled frames: {sampled_frames}, windows: {candidate_windows}"
+            f"{filename} -> accepted clear faces: {accepted_in_video}, "
+            f"candidate windows: {candidate_windows}, rejected: {rejected_in_video}, "
+            f"totals (candidates/accepted/rejected): "
+            f"{total_candidate_windows}/{total_accepted}/{total_rejected}, sampled frames: {sampled_frames}"
         )
-        if snapshot_path:
+        self.import_progress_page.set_detection_stats(
+            total_candidate_windows,
+            total_accepted,
+            total_rejected,
+            "running (strict clear-face acceptance)",
+        )
+        if snapshot_path and accepted_in_video > 0:
             self.import_progress_page.set_detection_preview(
                 snapshot_path,
-                f"Best confirmed result from {filename}",
+                f"Accepted clear face from {filename}",
+            )
+        elif self._show_rejected_debug and rejected_preview_path:
+            self.import_progress_page.set_detection_preview(
+                rejected_preview_path,
+                f"Rejected debug detection from {filename}",
             )
 
     def _on_import_finished(self, case_path: str) -> None:
         self._last_case_path = Path(case_path)
         self.import_progress_page.set_stage("Completed")
-        self.import_progress_page.set_detection_stats(self._persons_found, "completed (FFmpeg sampled face-first)")
+        self.import_progress_page.set_detection_stats(
+            self._candidate_windows_found,
+            self._persons_found,
+            self._rejected_candidates,
+            "completed (final gallery includes only clear accepted faces)",
+        )
         self.import_progress_page.append_log(f"Import finished. Case path: {case_path}")
         self.import_progress_page.append_log("All DB/log/output artifacts were stored locally on this PC.")
         QMessageBox.information(self, "Import finished", f"Import completed.\n{case_path}")

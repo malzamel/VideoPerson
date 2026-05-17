@@ -12,7 +12,7 @@ class ImportOptions:
     verify_by_size: bool = True
     calculate_sha256: bool = False
     skip_already_copied: bool = True
-    process_from_source: bool = False
+    process_from_source: bool = True
     processing_mode: str = "balanced"
     detection_strategy: str = "person_first_then_face"
     camera_filter: str = "front"
@@ -25,6 +25,7 @@ class ImportOptions:
     max_detection_width: int = 960
     use_gpu: bool = True
     debug_mode: bool = False
+    show_rejected_debug: bool = False
     chunk_size: int = DEFAULT_COPY_CHUNK_SIZE
 
 

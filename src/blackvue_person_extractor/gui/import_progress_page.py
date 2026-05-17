@@ -41,7 +41,7 @@ class ImportProgressPage(QWidget):
 
         self.counters_label = QLabel("Processed: 0 | Skipped: 0 | Failed: 0 | Bytes copied: 0")
         root.addWidget(self.counters_label)
-        self.stats_label = QLabel("Persons found: 0 | Detection: not started")
+        self.stats_label = QLabel("Candidate windows: 0 | Clear faces accepted: 0 | Rejected candidates: 0 | Detection: not started")
         root.addWidget(self.stats_label)
         self.preview_title = QLabel("Latest person preview: -")
         root.addWidget(self.preview_title)
@@ -90,8 +90,12 @@ class ImportProgressPage(QWidget):
     def set_mode(self, mode_text: str) -> None:
         self.mode_label.setText(f"Mode: {mode_text}")
 
-    def set_detection_stats(self, persons_found: int, note: str) -> None:
-        self.stats_label.setText(f"Persons found: {persons_found} | Detection: {note}")
+    def set_detection_stats(self, candidate_windows: int, accepted_faces: int, rejected_candidates: int, note: str) -> None:
+        self.stats_label.setText(
+            "Candidate windows: "
+            f"{candidate_windows} | Clear faces accepted: {accepted_faces} | "
+            f"Rejected candidates: {rejected_candidates} | Detection: {note}"
+        )
 
     def set_detection_preview(self, image_path: str, title: str) -> None:
         pixmap = QPixmap(image_path)

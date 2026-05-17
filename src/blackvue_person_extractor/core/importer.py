@@ -25,6 +25,8 @@ class ImportStats:
     failed_files: int = 0
     bytes_copied: int = 0
     persons_found: int = 0
+    candidate_windows_found: int = 0
+    rejected_candidates: int = 0
 
 
 class ImportController:
@@ -113,7 +115,10 @@ def import_files(
     stats = ImportStats(total_files=len(filtered_files))
     detector = PersonDetector()
     snapshot_dir = output_dir / "person_shots"
+    debug_dir = output_dir / "debug"
     snapshot_dir.mkdir(parents=True, exist_ok=True)
+    if options.debug_mode:
+        debug_dir.mkdir(parents=True, exist_ok=True)
     settings_hash = hashlib.sha256(
         json.dumps(
             {
@@ -176,7 +181,11 @@ def import_files(
                     source.name,
                     cached_persons,
                     stats.persons_found,
+                    stats.candidate_windows_found,
+                    stats.rejected_candidates,
                     str(cache_row["snapshot_path"] or ""),
+                    "",
+                    0,
                     0,
                     0,
                 )
@@ -248,7 +257,8 @@ def import_files(
             try:
                 detection = detector.detect_people_and_snapshot(
                     imported_video_path,
-                    output_dir=snapshot_dir / source.stem,
+                    output_dir=snapshot_dir,
+                    debug_dir=debug_dir,
                     recording_type_code=item.recording_type_code,
                     camera_direction_code=item.camera_direction_code,
                     config=DetectionConfig(
@@ -262,13 +272,16 @@ def import_files(
                         debug_mode=options.debug_mode,
                     ),
                 )
-                persons_in_video = detection.max_people
+                persons_in_video = detection.accepted_faces
+                stats.candidate_windows_found += detection.candidate_windows
+                stats.rejected_candidates += detection.rejected_candidates
                 logger.info(
-                    "detection complete for %s: persons=%s sampled=%s windows=%s",
+                    "detection complete for %s: clear_faces=%s sampled=%s windows=%s rejected=%s",
                     source.name,
                     persons_in_video,
                     detection.sampled_frames,
                     detection.candidate_windows,
+                    detection.rejected_candidates,
                 )
             except Exception as detection_exc:  # noqa: BLE001
                 persons_in_video = 0
@@ -281,9 +294,17 @@ def import_files(
                     source.name,
                     persons_in_video,
                     stats.persons_found,
+                    stats.candidate_windows_found,
+                    stats.rejected_candidates,
                     str(detection.snapshot_path) if detection and detection.snapshot_path else "",
+                    (
+                        str(detection.rejected_preview_path)
+                        if detection and options.show_rejected_debug and detection.rejected_preview_path
+                        else ""
+                    ),
                     detection.sampled_frames if detection else 0,
                     detection.candidate_windows if detection else 0,
+                    detection.rejected_candidates if detection else 0,
                 )
             repositories.upsert_processing_cache(
                 conn,

@@ -62,7 +62,7 @@ class ImportWorker(QObject):
     file_done = Signal(int, str, str)
     error = Signal(str, str)
     counters = Signal(int, int, int, "qint64", int)
-    detection = Signal(str, int, int, str, int, int)
+    detection = Signal(str, int, int, int, int, str, str, int, int, int)
     finished = Signal(str)
     failed = Signal(str)
 
@@ -107,13 +107,17 @@ class ImportWorker(QObject):
                     bytes_copied,
                     persons_found,
                 ),
-                on_detection=lambda filename, persons_in_video, total_persons, snapshot_path, sampled_frames, candidate_windows: self.detection.emit(
+                on_detection=lambda filename, persons_in_video, total_persons, total_candidate_windows, total_rejected, snapshot_path, rejected_preview_path, sampled_frames, candidate_windows, rejected_in_video: self.detection.emit(
                     filename,
                     persons_in_video,
                     total_persons,
+                    total_candidate_windows,
+                    total_rejected,
                     snapshot_path,
+                    rejected_preview_path,
                     sampled_frames,
                     candidate_windows,
+                    rejected_in_video,
                 ),
             )
             logger.info("ImportWorker finished: case_root=%s", case_root)
