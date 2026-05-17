@@ -18,3 +18,4 @@ build/
 .vscode/
 *.log
 *.sqlite
+yolo11n.pt

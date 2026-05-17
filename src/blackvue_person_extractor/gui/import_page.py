@@ -123,12 +123,12 @@ class ImportPage(QWidget):
         self.sha_checkbox = QCheckBox("Calculate SHA256 hash after copy")
         self.skip_checkbox = QCheckBox("Skip already processed files")
         self.skip_checkbox.setChecked(True)
-        self.process_from_source_checkbox = QCheckBox("Process directly from source (no copy)")
+        self.process_from_source_checkbox = QCheckBox("Process directly from source (no copy) - slower, advanced")
         self.direct_mode_note = QLabel(
             "Direct mode keeps SD card files untouched and stores DB/logs/results in the selected local archive folder."
         )
         self.direct_mode_note.setWordWrap(True)
-        self.process_from_source_checkbox.setChecked(True)
+        self.process_from_source_checkbox.setChecked(False)
         self.process_from_source_checkbox.toggled.connect(self._on_process_from_source_toggled)
         options_layout.addWidget(self.verify_size_checkbox)
         options_layout.addWidget(self.sha_checkbox)
@@ -148,8 +148,8 @@ class ImportPage(QWidget):
 
         self.detection_strategy_combo = QComboBox()
         self.detection_strategy_combo.addItem("Face only - fastest", "face_only")
-        self.detection_strategy_combo.addItem("Face first, then person - recommended", "face_then_person")
-        self.detection_strategy_combo.addItem("Person + face - slowest", "person_and_face")
+        self.detection_strategy_combo.addItem("Person first, then face - recommended", "person_first_then_face")
+        self.detection_strategy_combo.addItem("Person + face (person-only fallback)", "person_only")
         self.detection_strategy_combo.setCurrentIndex(1)
 
         self.camera_combo = QComboBox()
@@ -192,6 +192,8 @@ class ImportPage(QWidget):
 
         self.use_gpu_checkbox = QCheckBox("Use GPU if available")
         self.use_gpu_checkbox.setChecked(True)
+        self.debug_mode_checkbox = QCheckBox("Save debug overlays (accepted/rejected)")
+        self.debug_mode_checkbox.setChecked(False)
         self.important_first_checkbox = QCheckBox("Process important recordings first (E/I/M)")
         self.important_first_checkbox.setChecked(True)
         self.ai_status_label = QLabel("AI acceleration: detecting...")
@@ -218,6 +220,7 @@ class ImportPage(QWidget):
         perf_form.addRow("Detailed rescan FPS:", self.detailed_fps_spin)
         perf_form.addRow("Max detection width:", self.max_width_spin)
         perf_form.addRow("", self.use_gpu_checkbox)
+        perf_form.addRow("", self.debug_mode_checkbox)
         perf_form.addRow("", self.important_first_checkbox)
         perf_form.addRow("AI acceleration:", self.ai_status_label)
         perf_form.addRow("Cache actions:", cache_buttons_widget)
@@ -393,6 +396,7 @@ class ImportPage(QWidget):
             "detailed_rescan_fps": float(self.detailed_fps_spin.value()),
             "max_detection_width": int(self.max_width_spin.value()),
             "use_gpu": self.use_gpu_checkbox.isChecked(),
+            "debug_mode": self.debug_mode_checkbox.isChecked(),
             "prioritize_important_first": self.important_first_checkbox.isChecked(),
             "reprocess_scope": self._reprocess_scope,
         }

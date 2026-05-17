@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
             (
                 f"Direct from source (SD card read-only) | "
                 f"{advanced_settings.get('processing_mode', 'balanced')} | "
-                f"{advanced_settings.get('detection_strategy', 'face_then_person')}"
+                f"{advanced_settings.get('detection_strategy', 'person_first_then_face')}"
             )
             if process_from_source
             else f"Copy to local archive | {advanced_settings.get('processing_mode', 'balanced')}"
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
             skip_already_copied=skip_already_copied,
             process_from_source=process_from_source,
             processing_mode=str(advanced_settings.get("processing_mode", "balanced")),
-            detection_strategy=str(advanced_settings.get("detection_strategy", "face_then_person")),
+            detection_strategy=str(advanced_settings.get("detection_strategy", "person_first_then_face")),
             camera_filter=camera_filter,
             recording_type_filter=recording_type_filter,
             prioritize_important_first=bool(advanced_settings.get("prioritize_important_first", True)),
@@ -213,6 +213,7 @@ class MainWindow(QMainWindow):
             detailed_rescan_fps=float(advanced_settings.get("detailed_rescan_fps", 5.0)),
             max_detection_width=int(advanced_settings.get("max_detection_width", 960)),
             use_gpu=bool(advanced_settings.get("use_gpu", True)),
+            debug_mode=bool(advanced_settings.get("debug_mode", False)),
         )
         self.import_page.append_log(
             f"Run config: mode={options.processing_mode}, strategy={options.detection_strategy}, "
@@ -313,7 +314,7 @@ class MainWindow(QMainWindow):
         if snapshot_path:
             self.import_progress_page.set_detection_preview(
                 snapshot_path,
-                f"Best face shot from {filename}",
+                f"Best confirmed result from {filename}",
             )
 
     def _on_import_finished(self, case_path: str) -> None:

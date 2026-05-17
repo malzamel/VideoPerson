@@ -259,6 +259,7 @@ def import_files(
                         event_sample_fps=options.event_sample_fps,
                         detailed_rescan_fps=options.detailed_rescan_fps,
                         max_detection_width=options.max_detection_width,
+                        debug_mode=options.debug_mode,
                     ),
                 )
                 persons_in_video = detection.max_people

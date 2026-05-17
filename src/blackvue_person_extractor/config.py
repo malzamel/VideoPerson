@@ -12,9 +12,9 @@ class ImportOptions:
     verify_by_size: bool = True
     calculate_sha256: bool = False
     skip_already_copied: bool = True
-    process_from_source: bool = True
+    process_from_source: bool = False
     processing_mode: str = "balanced"
-    detection_strategy: str = "face_then_person"
+    detection_strategy: str = "person_first_then_face"
     camera_filter: str = "front"
     recording_type_filter: tuple[str, ...] = ("E", "I", "M", "N", "P")
     prioritize_important_first: bool = True
@@ -24,6 +24,7 @@ class ImportOptions:
     detailed_rescan_fps: float = 5.0
     max_detection_width: int = 960
     use_gpu: bool = True
+    debug_mode: bool = False
     chunk_size: int = DEFAULT_COPY_CHUNK_SIZE
 
 
